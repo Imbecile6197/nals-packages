@@ -10,13 +10,13 @@ Vyberete složku na NASu, přiřadíte jí složku v počítači a synchronizace
 pokračovat na pozadí i po zavření okna. Stav ukazuje ikona v systémové liště.
 
 Cílem je jednoduché ovládání, přirozený vzhled GNOME a opatrné zacházení s daty.
-Aktuální verze **0.3.0 je experimentální**; není plnou náhradou Synology Drive Client.
+Aktuální verze **0.3.1 je experimentální**; není plnou náhradou Synology Drive Client.
 
 ## Co NALS umí
 
 - **Procházení NASu a výběr složek** — po přihlášení nabídne dostupné sdílené složky.
-- **Stahování nebo obousměrný přenos** — zvolíte složku NASu a odpovídající místní složku.
-- **Volitelné obnovitelné změny** — nový režim eviduje společné verze, archivuje starý obsah a umí přenášet mazání souborů. Je dostupný pouze po úspěšném testu bezpečnosti NASu; viz omezení níže.
+- **Obousměrná synchronizace přes WebDAV** — zvolíte složku NASu, místní složku a použijete jediné tlačítko **Spustit synchronizaci**.
+- **Obnovitelné změny a mazání** — společný stav umožňuje přenášet změny a smazání souborů. Předchozí obsah se archivuje a úprava má přednost před smazáním. Před spuštěním se ověřuje chování zámků na NASu.
 - **Běh na pozadí** — samostatná služba provádí pravidelné kontroly; okno můžete zavřít.
 - **Animovaná barevná stavová ikona** — při syncu se otáčejí oranžové šipky, v klidu je zelená, při pauze šedá a při chybě červená.
 - **Automatická kontrola aktualizací** — kontroluje GitHub při spuštění a každých šest hodin; nabídne instalaci po potvrzení. Nativní balíky aktualizuje přes podepsaný systémový repozitář, až po zastavení syncu. Lokální vývojová instalace nabídne návod k přechodu na balíky.
@@ -70,44 +70,25 @@ Samostatné balíky jsou také v [Releases](https://github.com/Imbecile6197/nals
 1. Otevřete **NALS** z nabídky aplikací nebo spusťte `/usr/bin/nals`.
 2. Zadejte HTTPS adresu NASu a přihlaste se svým účtem.
 3. Vyberte složku na NASu a složku v počítači.
-4. Zvolte režim přenosu a synchronizaci výslovně spusťte.
+4. Na NASu zapněte HTTPS v aplikaci WebDAV Server (výchozí port **5006**) a povolte účtu přístup.
+5. Uložte heslo do systémové klíčenky, uložte dvojici složek a klikněte na **Spustit synchronizaci**.
+
+Tlačítko **O aplikaci** v záhlaví ukazuje verzi, licenci a informace o ochraně dat.
 
 Pro stavovou ikonu potřebuje GNOME rozšíření podporující AppIndicator / KStatusNotifierItem.
 Při instalaci se synchronizace automaticky nespouští.
 
 ## Jak pracuje se soubory
 
-NALS používá dokumentované **DSM / File Station API**. Neimplementuje proprietární
-synchronizační protokol Synology Drive. Nové soubory nahrává přes pracovní soubor,
-ověření přeneseného obsahu a kontrolované zveřejnění cílového jména.
+NALS používá **DSM / File Station API** pro procházení a stahování a **HTTPS WebDAV** pro zápis a archivaci. Neimplementuje proprietární synchronizační protokol Synology Drive.
 
-Aditivní režim zachovává rozdílné verze pod názvy `.nas-conflict-…` nebo
-`.pc-conflict-…` a nepřenáší mazání.
+Od verze **0.3.1** nabízí rozhraní jediný způsob spuštění: **Spustit synchronizaci**. Tři starší File Station varianty byly odstraněné z GUI. WebDAV používá obnovované serverové zámky, pracovní soubory, ověření SHA-256 a kontrolované zveřejnění cílového jména. Před spuštěním se ověří zámky i shoda složek mezi oběma rozhraními. Heslo zůstává v systémové klíčence a při běhu pouze v paměti služby.
 
-Nový, samostatně volený režim s obnovitelným mazáním má trvalý společný stav a
-rozpracované operace odolné proti přerušení. Starý obsah přesouvá do skrytých
-`.nals-history-<UUID>` souborů; trvale je nemaže. Úprava vítězí nad smazáním.
-Při souběžných úpravách vybírá novější obsah jen při důvěryhodných časových údajích;
-nejisté konflikty ponechá k rozhodnutí. Prázdné složky se neodstraňují a přejmenování
-se nesleduje jako samostatná operace.
+Starý obsah se přesouvá do skrytých souborů `.nals-history-<UUID>`, trvale se nemaže. Úprava vítězí nad smazáním. Při souběžných úpravách se vybere novější obsah pouze při důvěryhodných časových údajích; nejisté konflikty zůstávají k rozhodnutí. Prázdné složky se neodstraňují a přejmenování se nesleduje jako samostatná operace.
 
-**Nově ve verzi 0.3.0:** samostatné tlačítko **Spustit WebDAV sync s uloženým heslem**
-používá HTTPS WebDAV (výchozí port 5006), obnovované serverové zámky, pracovní
-soubory a ověření obsahu. File Station dále zajišťuje procházení a stahování.
-Před spuštěním se ověří zámky i shoda složek mezi oběma rozhraními. Heslo je v
-systémové klíčence a při běhu pouze v paměti služby. WebDAV Server na NASu musí
-mít zapnuté HTTPS a účet musí mít přístup ke službě i složce.
+Na DS223 prošel ve verzi 0.3.0 celý test služby v oddělené složce sdg-test: přenos oběma směry, náhrady, obnovitelné mazání i úprava proti smazání. Verze 0.3.1 upravuje rozhraní; synchronizační jádro nemění. **Úplný průchod velkou osobní složkou zatím potvrzený není. WebDAV zámky nechrání proti souběžným zápisům přes SMB, File Station nebo aplikace přímo na NASu.**
 
-Na DS223 prošel celý test služby v oddělené složce sdg-test: přenos oběma směry,
-náhrady, obnovitelné mazání i úprava proti smazání, bez konfliktů. První úplný
-průchod velkou osobní složkou zatím potvrzený není. WebDAV zámky nechrání proti
-souběžným zápisům přes SMB, File Station nebo aplikace přímo na NASu.
-Původní File Station kontrola nahrávání zůstává zachovaná a její neúspěch se
-neobchází; WebDAV je samostatný režim.
-
-Současné limity jsou 100 000 položek, hloubka 32 a nejvýše 1 TiB na soubor.
-Přenosy používají průběžné čtení a dočasné soubory na disku. Úplný průchod velkou
-osobní složkou ještě nebyl potvrzen; na DS223 byl ověřen zkušební přenos 20 MiB.
+Limity jsou 100 000 položek, hloubka 32 a nejvýše 1 TiB na soubor. Přenosy používají průběžné čtení a dočasné soubory na disku.
 
 ## Přechod ze staré lokální instalace
 
