@@ -1,0 +1,30 @@
+NALS Binary Use License, version 1.0
+Copyright (c) 2026 NALS copyright holders. All rights reserved.
+
+1. Permission. You may download, install and use official NALS binary releases
+   free of charge, for personal or commercial purposes. You may copy and
+   redistribute unmodified official binary packages with this license and all
+   included third-party notices intact. No trademark endorsement is granted.
+
+2. Source code. NALS first-party source code is proprietary and is not licensed
+   for public distribution, modification or incorporation into other software.
+   Access to a private repository does not grant additional redistribution rights.
+   Additional permissions require written authorization from the copyright holders.
+
+3. Third-party components. Third-party software retains its own licenses and
+   copyrights. THIRD-PARTY-NOTICES lists bundled Rust dependencies. NALS uses
+   unmodified system shared libraries, including GTK, GLib, libadwaita and
+   libsecret, supplied separately by your operating system. Their licenses apply
+   independently and take precedence for those components. You may replace or
+   modify those libraries and reverse engineer the combined work to debug such
+   modifications to the extent permitted by their licenses. Nothing here limits
+   rights required by applicable law or a third-party license.
+
+4. Disclaimer. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR
+   PURPOSE AND NON-INFRINGEMENT. TO THE EXTENT PERMITTED BY LAW, THE COPYRIGHT
+   HOLDERS ARE NOT LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+   FROM THE SOFTWARE OR ITS USE. Mandatory statutory rights are unaffected.
+
+5. Earlier versions. This license applies only to versions explicitly released
+   under it. It does not revoke rights already granted for earlier GPL releases.
