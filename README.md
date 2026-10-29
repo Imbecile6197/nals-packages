@@ -10,15 +10,17 @@ Vyberete složku na NASu, přiřadíte jí složku v počítači a synchronizace
 pokračovat na pozadí i po zavření okna. Stav ukazuje ikona v systémové liště.
 
 Cílem je jednoduché ovládání, přirozený vzhled GNOME a opatrné zacházení s daty.
-Aktuální verze **0.1.2 je experimentální**; není plnou náhradou Synology Drive Client.
+Aktuální verze **0.2.0 je experimentální**; není plnou náhradou Synology Drive Client.
 
 ## Co NALS umí
 
 - **Procházení NASu a výběr složek** — po přihlášení nabídne dostupné sdílené složky.
 - **Stahování nebo obousměrný přenos** — zvolíte složku NASu a odpovídající místní složku.
-- **Zachování různých verzí** — rozdílný obsah ukládá jako konfliktní kopie, místo aby úmyslně přepsal původní soubor.
+- **Volitelné obnovitelné změny** — nový režim eviduje společné verze, archivuje starý obsah a umí přenášet mazání souborů. Je dostupný pouze po úspěšném testu bezpečnosti NASu; viz omezení níže.
 - **Běh na pozadí** — samostatná služba provádí pravidelné kontroly; okno můžete zavřít.
-- **Stavová ikona s podrobným popiskem** — při najetí ukazuje aktuální činnost, počet souborů a přenesené MiB; umožňuje otevřít NALS či zastavit sync.
+- **Animovaná barevná stavová ikona** — při syncu se otáčejí oranžové šipky, v klidu je zelená, při pauze šedá a při chybě červená.
+- **Automatická kontrola aktualizací** — kontroluje GitHub při spuštění a každých šest hodin; nabídne instalaci po potvrzení. Nativní balíky aktualizuje přes podepsaný systémový repozitář, až po zastavení syncu. Lokální vývojová instalace nabídne návod k přechodu na balíky.
+- **Podrobný popisek ikony** — při najetí ukazuje aktuální činnost, počet souborů a přenesené MiB; umožňuje otevřít NALS či zastavit sync.
 - **Volitelné zapamatování hesla** — používá systémovou klíčenku Secret Service / GNOME Keyring.
 - **HTTPS a ověřování certifikátu** — podporuje i připojení přes místní IP při zachování názvu NASu v certifikátu.
 - **Jednorázový ověřovací kód** — při přihlášení lze zadat OTP, pokud jej NAS vyžaduje.
@@ -79,9 +81,22 @@ NALS používá dokumentované **DSM / File Station API**. Neimplementuje propri
 synchronizační protokol Synology Drive. Nové soubory nahrává přes pracovní soubor,
 ověření přeneseného obsahu a kontrolované zveřejnění cílového jména.
 
-Rozdílné verze zachovává pod názvy `.nas-conflict-…` nebo `.pc-conflict-…`.
-**Mazání se nepřenáší.** Úpravy se zachovávají jako konfliktní verze; nejde o přesné
-zrcadlení složek. Přejmenování se zatím nesleduje jako samostatná operace.
+Aditivní režim zachovává rozdílné verze pod názvy `.nas-conflict-…` nebo
+`.pc-conflict-…` a nepřenáší mazání.
+
+Nový, samostatně volený režim s obnovitelným mazáním má trvalý společný stav a
+rozpracované operace odolné proti přerušení. Starý obsah přesouvá do skrytých
+`.nals-history-<UUID>` souborů; trvale je nemaže. Úprava vítězí nad smazáním.
+Při souběžných úpravách vybírá novější obsah jen při důvěryhodných časových údajích;
+nejisté konflikty ponechá k rozhodnutí. Prázdné složky se neodstraňují a přejmenování
+se nesleduje jako samostatná operace.
+
+**Stav ověření na DS223:** zkušební souběžné zveřejnění stejného jména přes
+File Station nyní ohlásilo úspěch oběma požadavkům. Bezpečnostní kontrola proto
+nahrávání zablokovala, před změnami osobních souborů. Tento NAS tedy zatím nemá
+potvrzený bezpečný obousměrný sync. Nový režim je otestovaný na mock serveru,
+ale dostupnost zápisu závisí na skutečném výsledku testů NASu. Stahování,
+procházení a updater fungují nezávisle na této kontrole.
 
 Současné limity jsou 100 000 položek, hloubka 32 a nejvýše 1 TiB na soubor.
 Přenosy používají průběžné čtení a dočasné soubory na disku. Úplný průchod velkou
@@ -105,11 +120,9 @@ Konfiguraci, klíčenku, synchronizované soubory a složku
 
 ## Co připravujeme
 
-Dalším krokem je přenášení mazání a nahrazování starších obsahů novější verzí.
-Při střetu smazání s novou úpravou vyhraje upravený soubor a obnoví se na obou
-stranách. Před nahrazením nebo odebráním z aktivní složky se starý obsah zachová
-pro obnovu. Pravidla jsou otestovaná, ale v aktuální verzi ještě nejsou zapnutá:
-zbývá trvalý společný stav a provádění změn odolné proti přerušení.
+Dalším krokem je ověření transportu s podmíněnými zápisy (například WebDAV přes
+HTTPS), který spolehlivě odmítne souběžné vytvoření stejného jména. Nové pravidlo
+nesmí být zapnuto obcházením neúspěšné bezpečnostní kontroly.
 
 ## Licence a zdrojový kód
 
