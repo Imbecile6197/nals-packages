@@ -10,7 +10,7 @@ Vyberete složku na NASu, přiřadíte jí složku v počítači a synchronizace
 pokračovat na pozadí i po zavření okna. Stav ukazuje ikona v systémové liště.
 
 Cílem je jednoduché ovládání, přirozený vzhled GNOME a opatrné zacházení s daty.
-Aktuální verze **0.2.0 je experimentální**; není plnou náhradou Synology Drive Client.
+Aktuální verze **0.3.0 je experimentální**; není plnou náhradou Synology Drive Client.
 
 ## Co NALS umí
 
@@ -91,12 +91,19 @@ Při souběžných úpravách vybírá novější obsah jen při důvěryhodnýc
 nejisté konflikty ponechá k rozhodnutí. Prázdné složky se neodstraňují a přejmenování
 se nesleduje jako samostatná operace.
 
-**Stav ověření na DS223:** zkušební souběžné zveřejnění stejného jména přes
-File Station nyní ohlásilo úspěch oběma požadavkům. Bezpečnostní kontrola proto
-nahrávání zablokovala, před změnami osobních souborů. Tento NAS tedy zatím nemá
-potvrzený bezpečný obousměrný sync. Nový režim je otestovaný na mock serveru,
-ale dostupnost zápisu závisí na skutečném výsledku testů NASu. Stahování,
-procházení a updater fungují nezávisle na této kontrole.
+**Nově ve verzi 0.3.0:** samostatné tlačítko **Spustit WebDAV sync s uloženým heslem**
+používá HTTPS WebDAV (výchozí port 5006), obnovované serverové zámky, pracovní
+soubory a ověření obsahu. File Station dále zajišťuje procházení a stahování.
+Před spuštěním se ověří zámky i shoda složek mezi oběma rozhraními. Heslo je v
+systémové klíčence a při běhu pouze v paměti služby. WebDAV Server na NASu musí
+mít zapnuté HTTPS a účet musí mít přístup ke službě i složce.
+
+Na DS223 prošel celý test služby v oddělené složce sdg-test: přenos oběma směry,
+náhrady, obnovitelné mazání i úprava proti smazání, bez konfliktů. První úplný
+průchod velkou osobní složkou zatím potvrzený není. WebDAV zámky nechrání proti
+souběžným zápisům přes SMB, File Station nebo aplikace přímo na NASu.
+Původní File Station kontrola nahrávání zůstává zachovaná a její neúspěch se
+neobchází; WebDAV je samostatný režim.
 
 Současné limity jsou 100 000 položek, hloubka 32 a nejvýše 1 TiB na soubor.
 Přenosy používají průběžné čtení a dočasné soubory na disku. Úplný průchod velkou
@@ -120,9 +127,8 @@ Konfiguraci, klíčenku, synchronizované soubory a složku
 
 ## Co připravujeme
 
-Dalším krokem je ověření transportu s podmíněnými zápisy (například WebDAV přes
-HTTPS), který spolehlivě odmítne souběžné vytvoření stejného jména. Nové pravidlo
-nesmí být zapnuto obcházením neúspěšné bezpečnostní kontroly.
+Dalším krokem je ověření úplného průchodu velkou osobní složkou, sledování
+přejmenování a další práce se souběžnými změnami z jiných přístupových protokolů.
 
 ## Licence a zdrojový kód
 
