@@ -10,7 +10,7 @@ Vyberete složku na NASu, přiřadíte jí složku v počítači a synchronizace
 pokračovat na pozadí i po zavření okna. Stav ukazuje ikona v systémové liště.
 
 Cílem je jednoduché ovládání, přirozený vzhled GNOME a opatrné zacházení s daty.
-Aktuální verze **0.1.1 je experimentální**; není plnou náhradou Synology Drive Client.
+Aktuální verze **0.1.2 je experimentální**; není plnou náhradou Synology Drive Client.
 
 ## Co NALS umí
 
@@ -18,7 +18,7 @@ Aktuální verze **0.1.1 je experimentální**; není plnou náhradou Synology D
 - **Stahování nebo obousměrný přenos** — zvolíte složku NASu a odpovídající místní složku.
 - **Zachování různých verzí** — rozdílný obsah ukládá jako konfliktní kopie, místo aby úmyslně přepsal původní soubor.
 - **Běh na pozadí** — samostatná služba provádí pravidelné kontroly; okno můžete zavřít.
-- **Stavová ikona** — ukazuje průběh nebo potřebu zásahu a umožňuje otevřít NALS či zastavit sync.
+- **Stavová ikona s podrobným popiskem** — při najetí ukazuje aktuální činnost, počet souborů a přenesené MiB; umožňuje otevřít NALS či zastavit sync.
 - **Volitelné zapamatování hesla** — používá systémovou klíčenku Secret Service / GNOME Keyring.
 - **HTTPS a ověřování certifikátu** — podporuje i připojení přes místní IP při zachování názvu NASu v certifikátu.
 - **Jednorázový ověřovací kód** — při přihlášení lze zadat OTP, pokud jej NAS vyžaduje.
@@ -102,6 +102,14 @@ Stejně přejmenujte starý zástupce
 Konfiguraci, klíčenku, synchronizované soubory a složku
 `synology-drive-gnome.service.d` ponechte. Potom spusťte
 `systemctl --user daemon-reload` a `/usr/bin/nals`.
+
+## Co připravujeme
+
+Dalším krokem je přenášení mazání a nahrazování starších obsahů novější verzí.
+Při střetu smazání s novou úpravou vyhraje upravený soubor a obnoví se na obou
+stranách. Před nahrazením nebo odebráním z aktivní složky se starý obsah zachová
+pro obnovu. Pravidla jsou otestovaná, ale v aktuální verzi ještě nejsou zapnutá:
+zbývá trvalý společný stav a provádění změn odolné proti přerušení.
 
 ## Licence a zdrojový kód
 
