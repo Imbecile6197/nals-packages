@@ -10,7 +10,7 @@ Vyberete složku na NASu, přiřadíte jí složku v počítači a synchronizace
 pokračovat na pozadí i po zavření okna. Stav ukazuje ikona v systémové liště.
 
 Cílem je jednoduché ovládání, přirozený vzhled GNOME a opatrné zacházení s daty.
-Aktuální verze **0.3.1 je experimentální**; není plnou náhradou Synology Drive Client.
+Aktuální verze **0.3.2 je experimentální**; není plnou náhradou Synology Drive Client.
 
 ## Co NALS umí
 
@@ -39,13 +39,13 @@ složek, nikoli jako jediná záloha důležitých dat.
 | Systém | Balík | Architektura |
 | --- | --- | --- |
 | Fedora 44 | RPM | x86_64 |
-| Ubuntu 24.04 | DEB | amd64 |
+| Ubuntu 24.04 / 26.10 | DEB | amd64 |
 
 Repozitář přidáte jednou. Potom aplikaci instalujete a aktualizujete běžným
 správcem balíků. Podpisový klíč má otisk:
 `BC63 3220 FF9A 33DE 7747 ED3F 63D7 0C9D 9A3D 640C`.
 
-## Ubuntu 24.04 amd64 — jednorázové přidání
+## Ubuntu 24.04 / 26.10 amd64 — jednorázové přidání
 
 ```sh
 sudo install -d -m 0755 /etc/apt/keyrings
@@ -64,6 +64,8 @@ sudo dnf install nals
 
 Po přidání repozitáře stačí `sudo apt install nals` nebo `sudo dnf install nals`.
 Samostatné balíky jsou také v [Releases](https://github.com/Imbecile6197/nals-packages/releases).
+
+Verze **0.3.2** opravuje instalaci na Ubuntu 26.10 a podporuje nový aktualizační příkaz `pkgcli` i původní `pkcon`. Na Ubuntu 26.10 není nutné instalovat zrušený balík `packagekit-tools`.
 
 ## První spuštění
 
