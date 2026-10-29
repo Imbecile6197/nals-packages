@@ -46,16 +46,20 @@ jobs:
           gpg --batch --no-default-keyring --keyring "$PWD/trusted.gpg" --import nals.asc
           gpgv --keyring "$PWD/trusted.gpg" _site/apt/dists/stable/InRelease
           gpgv --keyring "$PWD/trusted.gpg" _site/rpm/fedora44/x86_64/repodata/repomd.xml.asc _site/rpm/fedora44/x86_64/repodata/repomd.xml
-      - name: Test apt install nals in Ubuntu
+      - name: Test apt install nals in Ubuntu 24.04 and 26.10
         run: |
-          docker run --rm -v "$PWD/_site:/repo:ro" ubuntu:24.04 bash -ec '
+          for ubuntu_version in 24.04 26.10; do
+          docker run --rm -v "$PWD/_site:/repo:ro" "ubuntu:$ubuntu_version" bash -ec '
+            sed -i "\|^path-exclude=/usr/share/locale|d" /etc/dpkg/dpkg.cfg.d/*
             cp /repo/nals.asc /etc/apt/trusted.gpg.d/nals.asc
             echo "deb [signed-by=/etc/apt/trusted.gpg.d/nals.asc] file:/repo/apt stable main" > /etc/apt/sources.list.d/nals.list
             apt-get update
             apt-get install -y nals
             dpkg-query -W nals
             test -x /usr/bin/nals
+            test -x /usr/bin/pkcon || test -x /usr/bin/pkgcli
           '
+          done
       - name: Test dnf install nals in Fedora
         run: |
           docker run --rm -v "$PWD/_site:/repo:ro" fedora:44 bash -ec '
