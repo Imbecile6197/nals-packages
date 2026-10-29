@@ -1,36 +1,73 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the workflow will run
+name: Publish signed APT and DNF repositories
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+  release:
+    types: [published]
   workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  publish:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: Imbecile6197/nals-packages
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - uses: actions/checkout@v7
+      - name: Download signed binary-only repository
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          if test -n "$RELEASE_TAG"; then
+            gh release download "$RELEASE_TAG" -p repository.tar.gz -D incoming
+          else
+            gh release download -p repository.tar.gz -D incoming
+          fi
+          python3 - <<'PY'
+          import tarfile
+          from pathlib import PurePosixPath
+          with tarfile.open('incoming/repository.tar.gz') as archive:
+              for entry in archive.getmembers():
+                  path = PurePosixPath(entry.name)
+                  if path.is_absolute() or '..' in path.parts or entry.issym() or entry.islnk():
+                      raise SystemExit('Unsafe archive member')
+                  if path.parts[0] not in {'apt', 'rpm', 'nals.asc', 'nals.repo', 'index.html', 'README.md', 'LICENSE'}:
+                      raise SystemExit('Unexpected distribution content')
+                  if any(part in {'.git', 'private-keys-v1.d'} for part in path.parts) or path.suffix in {'.rs', '.c', '.h', '.py'}:
+                      raise SystemExit('Application source or private key in distribution')
+              archive.extractall('_site', filter='data')
+          PY
+          cmp nals.asc _site/nals.asc
+          gpg --batch --no-default-keyring --keyring "$PWD/trusted.gpg" --import nals.asc
+          gpgv --keyring "$PWD/trusted.gpg" _site/apt/dists/stable/InRelease
+          gpgv --keyring "$PWD/trusted.gpg" _site/rpm/fedora44/x86_64/repodata/repomd.xml.asc _site/rpm/fedora44/x86_64/repodata/repomd.xml
+      - name: Test apt install nals in Ubuntu
+        run: |
+          docker run --rm -v "$PWD/_site:/repo:ro" ubuntu:24.04 bash -ec '
+            cp /repo/nals.asc /etc/apt/trusted.gpg.d/nals.asc
+            echo "deb [signed-by=/etc/apt/trusted.gpg.d/nals.asc] file:/repo/apt stable main" > /etc/apt/sources.list.d/nals.list
+            apt-get update
+            apt-get install -y nals
+            dpkg-query -W nals
+            test -x /usr/bin/nals
+          '
+      - name: Test dnf install nals in Fedora
+        run: |
+          docker run --rm -v "$PWD/_site:/repo:ro" fedora:44 bash -ec '
+            dnf --repofrompath=nals,file:///repo/rpm/fedora44/x86_64/ --setopt=nals.gpgkey=file:///repo/nals.asc --setopt=nals.gpgcheck=1 --setopt=nals.repo_gpgcheck=1 install -y nals
+            rpm -q nals
+            test -x /usr/bin/nals
+          '
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v5
+        id: deployment
